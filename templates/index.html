@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Executable</title>
+</head>
+<body>
+    <h1>Custom Executable Generator</h1>
+    <form id="exeForm">
+        <label for="inputs">Enter your customization:</label>
+        <input type="text" id="inputs" name="inputs" required>
+        <button type="submit">Generate Executable</button>
+    </form>
+
+    <script>
+        document.getElementById('exeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputs = document.getElementById('inputs').value;
+
+            const response = await fetch('http://127.0.0.1:5000/generate_exe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ inputs }),
+            });
+
+            if (response.ok) {
+                console.log('response.ok');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'custom_executable.exe';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                alert('Failed to generate executable');
+            }
+        });
+    </script>
+</body>
+</html>
