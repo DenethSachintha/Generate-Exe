@@ -13,6 +13,18 @@
         <button type="submit">Generate Executable</button>
     </form>
 
+    <h1>Generate DDL</h1>
+        <!-- Upload C File -->
+        <form id="uploadForm">
+            <label for="cFile">Select a C file:</label>
+            <input type="file" id="cFile" name="cFile" accept=".c" required>
+            <button type="button" onclick="uploadCFile()">Upload & Compile</button>
+        </form>
+    
+        <p id="uploadStatus"></p>
+        <p >Add name of uploaded file</p>
+        <button id="downloadBtn" style="display: block;" onclick="downloadDLL()">Download Compiled DLL</button>
+
     <script>
         document.getElementById('exeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -40,6 +52,41 @@
                 alert('Failed to generate executable');
             }
         });
+
+
+
+        async function uploadCFile() {
+            const fileInput = document.getElementById('cFile');
+            if (fileInput.files.length === 0) {
+                alert("Please select a C file to upload.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('uploadStatus').textContent = "Compilation successful!";
+                } else {
+                    document.getElementById('uploadStatus').textContent = "Error: " + data.error;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('uploadStatus').textContent = "Upload failed!";
+            }
+        }
+
+        function downloadDLL() {
+            const dllFileName = document.getElementById('inputs').value;  // Ensure this matches the compiled output
+            window.location.href = "http://127.0.0.1:5000/download/" + dllFileName;
+        }
     </script>
 </body>
 </html>
