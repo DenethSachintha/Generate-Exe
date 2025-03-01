@@ -17,6 +17,7 @@ ALLOWED_EXTENSIONS = {"c"}
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(COMPILED_DIR, exist_ok=True)
+TEMPLATE_PATH = "template.py"
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -67,6 +68,15 @@ def download_file(filename):
     else:
         return jsonify({"error": "File not found"}), 404
 
+
+def generate_script_from_template(user_inputs):
+    """Generate a Python script from the template and user inputs."""
+    with open(TEMPLATE_PATH, 'r') as f:
+        template_content = f.read()
+
+    # Replace placeholders with user inputs
+    script_content = template_content.replace("{{ user_inputs }}", user_inputs)
+    return script_content
 @app.route('/generate_exe', methods=['POST'])
 def generate_exe():
     # Clear the TEMP_DIR before generating a new executable
@@ -82,12 +92,8 @@ def generate_exe():
     script_path = os.path.join(TEMP_DIR, f"{request_id}.py")
     exe_path = os.path.join(TEMP_DIR, f"{request_id}.exe")
 
-    # Step 1: Generate a Python script based on user inputs
-    script_content = f"""
-# This is a dynamically generated script
-print("User inputs: {user_inputs}")
-# Add more logic here based on user inputs
-"""
+    # Step 1: Generate a Python script from the template
+    script_content = generate_script_from_template(user_inputs)
     with open(script_path, 'w') as f:
         f.write(script_content)
 
