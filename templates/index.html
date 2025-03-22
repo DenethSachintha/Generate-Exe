@@ -25,6 +25,8 @@
         <p >Add name of uploaded file</p>
         <button id="downloadBtn" style="display: block;" onclick="downloadDLL()">Download Compiled DLL</button>
 
+        <h1> Data Fetcher and store in file response.text</h1>
+        <button onclick="fetchData()">Fetch & Store Data</button>
     <script>
         document.getElementById('exeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -86,6 +88,17 @@
         function downloadDLL() {
             const dllFileName = document.getElementById('inputs').value;  // Ensure this matches the compiled output
             window.location.href = "http://127.0.0.1:5000/download/" + dllFileName;
+        }
+
+        function fetchData() {
+            fetch('/fetch-data')
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message); // Show success message
+                })
+                .catch(error => {
+                    alert("Error fetching data: " + error);
+                });
         }
     </script>
 </body>

@@ -5,7 +5,7 @@ import uuid
 import shutil
 from werkzeug.utils import secure_filename
 import ctypes
-
+import requests
 
 app = Flask(__name__)
 
@@ -62,6 +62,7 @@ def upload_and_compile():
 
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
+    clear_directory(UPLOAD_FOLDER)
     filepath = os.path.join(COMPILED_DIR, filename)
     if os.path.exists(filepath):
         return send_file(filepath, as_attachment=True)
@@ -81,6 +82,7 @@ def generate_script_from_template(user_inputs):
 def generate_exe():
     # Clear the TEMP_DIR before generating a new executable
     clear_directory(TEMP_DIR)
+    clear_directory(UPLOAD_FOLDER)
 
     # Get user inputs from the request
     user_inputs = request.json.get('inputs')
@@ -99,7 +101,15 @@ def generate_exe():
 
     # Step 2: Use PyInstaller to generate the executable
     try:
-        subprocess.run(['pyinstaller', '--onefile', '--distpath', TEMP_DIR, '--workpath', TEMP_DIR, '--specpath', TEMP_DIR, script_path], check=True)
+        subprocess.run([
+            'pyinstaller',
+            '--onefile',
+            '--add-data', f"{os.pardir}{os.sep}{COMPILED_DIR}{os.pathsep}compiled",  # Correctly specify source and destination
+            '--distpath', TEMP_DIR,
+            '--workpath', TEMP_DIR,
+            '--specpath', TEMP_DIR,
+            script_path
+        ], check=True)
     except subprocess.CalledProcessError as e:
         return jsonify({"error": f"Failed to generate executable: {e}"}), 500
 
@@ -119,6 +129,25 @@ def clear_directory(dir_name):
                 shutil.rmtree(file_path)  # Delete subdirectory and contents
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
+
+@app.route('/fetch-data', methods=['GET'])
+def fetch_data():
+    api_url = "http://localhost:8081/api/v1/customers/find-by-id/986494c8-0c3f-40be-9a83-e85c59100d2a"
+    
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()  # Raise an error for bad status codes (4xx, 5xx)
+
+        data = response.json()
+
+        # Store API response in a file
+        with open("customer_data.json", "w") as file:
+            file.write(response.text)
+
+        return jsonify({"message": "Data fetched and stored successfully!", "data": data})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 @app.route('/')
 def home():
     return render_template('index.html')
