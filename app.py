@@ -13,12 +13,15 @@ app = Flask(__name__)
 TEMP_DIR = "temp_files"
 UPLOAD_FOLDER = "uploads"
 COMPILED_DIR = "compiled"
+LAYOUT_DATA_DIR = "layouts"
 ALLOWED_EXTENSIONS = {"c"}
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(COMPILED_DIR, exist_ok=True)
+os.makedirs(LAYOUT_DATA_DIR, exist_ok=True)
 TEMPLATE_PATH = "template.py"
 
+#Uploads C file and Compile it into ddl format
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -59,7 +62,29 @@ def upload_and_compile():
             return jsonify({"error": result.stderr}), 400
 
     return jsonify({"error": "Invalid file format"}), 400
+#fetch data from database and stores in json file
+@app.route('/fetch-data/<_id>', methods=['GET'])
+def fetch_data(_id):
+    api_url = f"http://localhost:8081/api/v1/customers/find-by-id/{_id}"
+    
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()  # Raise error for bad status codes
 
+        data = response.json()
+
+        # Define the file path inside 'layouts' directory
+        file_path = os.path.join(LAYOUT_DATA_DIR, f"layout_data-{_id}.json")
+
+        # Save API response to the file
+        with open(file_path, "w") as file:
+            file.write(response.text)
+
+        return jsonify({"message": f"Data saved in {file_path}", "data": data})
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
+#download ddl file based by filename
 @app.route("/download/<filename>", methods=["GET"])
 def download_file(filename):
     clear_directory(UPLOAD_FOLDER)
@@ -67,9 +92,10 @@ def download_file(filename):
     if os.path.exists(filepath):
         return send_file(filepath, as_attachment=True)
     else:
+        print(f"Directory '{filepath}' does not exist.")
         return jsonify({"error": "File not found"}), 404
 
-
+#use templet.py for get code 
 def generate_script_from_template(user_inputs):
     """Generate a Python script from the template and user inputs."""
     with open(TEMPLATE_PATH, 'r') as f:
@@ -78,6 +104,7 @@ def generate_script_from_template(user_inputs):
     # Replace placeholders with user inputs
     script_content = template_content.replace("{{ user_inputs }}", user_inputs)
     return script_content
+#generate EXE file 
 @app.route('/generate_exe', methods=['POST'])
 def generate_exe():
     # Clear the TEMP_DIR before generating a new executable
@@ -111,7 +138,7 @@ def generate_exe():
             script_path
         ], check=True)
     except subprocess.CalledProcessError as e:
-        return jsonify({"error": f"Failed to generate executable: {e}"}), 500
+        return jsonify({"error": f"Failed to generate exe=cutable: {e}"}), 500
 
     # Step 3: Provide the executable as a download link
     return send_file(exe_path, as_attachment=True)
@@ -130,24 +157,7 @@ def clear_directory(dir_name):
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
 
-@app.route('/fetch-data', methods=['GET'])
-def fetch_data():
-    api_url = "http://localhost:8081/api/v1/customers/find-by-id/986494c8-0c3f-40be-9a83-e85c59100d2a"
-    
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()  # Raise an error for bad status codes (4xx, 5xx)
 
-        data = response.json()
-
-        # Store API response in a file
-        with open("customer_data.json", "w") as file:
-            file.write(response.text)
-
-        return jsonify({"message": "Data fetched and stored successfully!", "data": data})
-
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": str(e)}), 500
 @app.route('/')
 def home():
     return render_template('index.html')

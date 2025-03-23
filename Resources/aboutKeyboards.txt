@@ -1,0 +1,16 @@
+// caps lock ek gahala key ekak press karama wada karanawa
+capital shortcut na ee kiyanne shift eka om wela thiyeddi key ekak generate unata awlak na ee wagema ee key eka capital ekak unoth wenasak na simple ekak nam eeka capital wela print wenne 
+
+C:\Users\kbdsj\Desktop>gcc main.c
+
+C:\Users\kbdsj\Desktop>gcc -o fix_s main.c
+
+C:\Users\kbdsj\Desktop>
+
+alt + shift and Ctrl + Shift and Ctrl + Win is not possible combination
+
+
+ctrl+alt some are possible
+win +alt and win + shift are mostly possibl
+
+

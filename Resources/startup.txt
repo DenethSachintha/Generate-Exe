@@ -1,0 +1,40 @@
+/flask_app
+│── /static        # (For CSS, JS, images)
+│── /templates     # (For HTML files)
+│── app.py         # (Main Flask application)
+│── requirements.txt  # (To store dependencies)
+
+# Create a virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+pip install flask
+pip install pyinstaller
+
+generate exe using postman
+curl -X POST http://127.0.0.1:5000/generate_exe -H "Content-Type: application/json" -d '{"inputs": "test"}'
+
+Generate 
+pip freeze > requirements.txt
+pip install -r requirements.txt
+
+
+cd ../../../..
+cd '.\Virtual Environments\FYP\Scripts\'
+.\activate
+cd 'C:\Users\kbdsj\Desktop\Projects\FYP\GenerateEXE\Dev\Generate-EXE'
+python app.py
+
+
+
+gcc --version
+
+compile c into dll
+gcc -shared -o my.dll "-Wl,--out-implib,my.a" "-Wl,--export-all-symbols" my.c
+gcc -shared -o my11.dll my11.c -Wl,--out-implib,libmy11.a
+
+run hello method of dll 
+rundll32 my11.dll,hello
+
+copied dll is here
+C:\Windows\System32\test
