@@ -1,4 +1,6 @@
+#app.py
 from flask import Flask, request, jsonify, send_file, render_template
+from model import clear_directory, upload_and_compile, download_file_handler
 import subprocess
 import os
 import uuid
@@ -21,47 +23,14 @@ os.makedirs(COMPILED_DIR, exist_ok=True)
 os.makedirs(LAYOUT_DATA_DIR, exist_ok=True)
 TEMPLATE_PATH = "template.py"
 
-#Uploads C file and Compile it into ddl format
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @app.route("/upload", methods=["POST"])
-def upload_and_compile():
-    clear_directory(COMPILED_DIR)
-    if "file" not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
+def handle_upload():
+    return upload_and_compile()
 
-    file = request.files["file"]
-    
-    if file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
+@app.route("/download/<filename>", methods=["GET"])
+def handle_download(filename):
+    return download_file_handler(filename)
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        c_filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(c_filepath)
-
-        output_name = os.path.splitext(filename)[0]  # Remove .c extension
-        output_dll = os.path.join(COMPILED_DIR, f"{output_name}.dll")
-        output_so = os.path.join(COMPILED_DIR, f"{output_name}.so")
-
-        # Determine platform and compile accordingly
-        if os.name == "nt":  # Windows
-            compile_command = f"gcc -shared -o {output_dll} -Wl,--out-implib,{COMPILED_DIR}/{output_name}.a -Wl,--export-all-symbols {c_filepath}"
-            compiled_file = output_dll
-        else:  # Linux/macOS
-            compile_command = f"gcc -shared -o {output_so} -fPIC {c_filepath}"
-            compiled_file = output_so
-
-        # Run the compilation command
-        result = subprocess.run(compile_command, shell=True, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            return jsonify({"message": "Compilation successful", "output": compiled_file})
-        else:
-            return jsonify({"error": result.stderr}), 400
-
-    return jsonify({"error": "Invalid file format"}), 400
 #fetch data from database and stores in json file
 @app.route('/fetch-data/<_id>', methods=['GET'])
 def fetch_data(_id):
@@ -84,16 +53,6 @@ def fetch_data(_id):
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
-#download ddl file based by filename
-@app.route("/download/<filename>", methods=["GET"])
-def download_file(filename):
-    clear_directory(UPLOAD_FOLDER)
-    filepath = os.path.join(COMPILED_DIR, filename)
-    if os.path.exists(filepath):
-        return send_file(filepath, as_attachment=True)
-    else:
-        print(f"Directory '{filepath}' does not exist.")
-        return jsonify({"error": "File not found"}), 404
 
 #use templet.py for get code 
 def generate_script_from_template(user_inputs):
@@ -142,22 +101,6 @@ def generate_exe():
 
     # Step 3: Provide the executable as a download link
     return send_file(exe_path, as_attachment=True)
-def clear_directory(dir_name): 
-    """Clear all files and subdirectories in the specified directory."""
-    if not os.path.exists(dir_name):
-        print(f"Directory '{dir_name}' does not exist.")
-        return
-    for filename in os.listdir(dir_name):
-        file_path = os.path.join(dir_name, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)  # Delete file or symbolic link
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)  # Delete subdirectory and contents
-        except Exception as e:
-            print(f"Failed to delete {file_path}. Reason: {e}")
-
-
 @app.route('/')
 def home():
     return render_template('index.html')
