@@ -1,112 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Generate Executable</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Custom Executable Generator</h1>
     <form id="exeForm">
-        <label for="inputs">Enter your customization:</label>
-        <input type="text" id="inputs" name="inputs" required>
-        <button type="submit">Generate Executable</button>
+      <label for="inputs">Enter your customization:</label>
+      <input type="text" id="inputs" name="inputs" required />
+      <button type="submit">Generate Executable</button>
     </form>
 
     <h1>Generate DDL</h1>
-        <!-- Upload C File -->
-        <form id="uploadForm">
-            <label for="cFile">Select a C file:</label>
-            <input type="file" id="cFile" name="cFile" accept=".c" required>
-            <button type="button" onclick="uploadCFile()">Upload & Compile</button>
-        </form>
-    
-        <p id="uploadStatus"></p>
-        <p >Add name of uploaded file</p>
-        <button id="downloadBtn" style="display: block;" onclick="downloadDLL()">Download Compiled DLL</button>
+    <!-- Upload C File -->
+    <form id="uploadForm">
+      <label for="cFile">Select a C file:</label>
+      <input type="file" id="cFile" name="cFile" accept=".c" required />
+      <button type="button" onclick="uploadCFile()">Upload & Compile</button>
+    </form>
 
-        <label for="layout_id">Enter Layout ID:986494c8-0c3f-40be-9a83-e85c59100d2a</label>
-        <input type="text" id="layout_id" placeholder="">
-        <button onclick="fetchData()">Fetch & Store Data</button>
+    <p id="uploadStatus"></p>
+    <p>Add name of uploaded file</p>
+    <button id="downloadBtn" style="display: block" onclick="downloadDLL()">
+      Download Compiled DLL
+    </button>
+    <h2>Update layout josn file</h2>
+    <label for="layout_id"
+      >Enter Layout ID:986494c8-0c3f-40be-9a83-e85c59100d2a</label
+    >
+    <input type="text" id="layout_id" placeholder="" />
+    <button onclick="fetchData()">Fetch & Store Data</button>
+
+    <h2>Custom DLL Generator</h2>
+    <form id="dllForm">
+      <label for="filename"
+        >Enter your customization filename (no extension):</label
+      ><br />
+      <input type="text" id="filename" name="filename" required />
+      <br /><br />
+      <button type="submit">Generate DLL</button>
+    </form>
+
+    <div id="result" style="margin-top: 20px; font-weight: bold"></div>
+
     <script>
-        document.getElementById('exeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const inputs = document.getElementById('inputs').value;
+      document
+        .getElementById("exeForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const inputs = document.getElementById("inputs").value;
 
-            const response = await fetch('http://127.0.0.1:5000/generate_exe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ inputs }),
-            });
+          const response = await fetch("http://127.0.0.1:5000/generate_exe", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ inputs }),
+          });
 
-            if (response.ok) {
-                console.log('response.ok');
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'custom_executable.exe';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } else {
-                alert('Failed to generate executable');
-            }
+          if (response.ok) {
+            console.log("response.ok");
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "custom_executable.exe";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            alert("Failed to generate executable");
+          }
         });
 
-
-
-        async function uploadCFile() {
-            const fileInput = document.getElementById('cFile');
-            if (fileInput.files.length === 0) {
-                alert("Please select a C file to upload.");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
-
-            try {
-                const response = await fetch("http://127.0.0.1:5000/upload", {
-                    method: "POST",
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById('uploadStatus').textContent = "Compilation successful!";
-                } else {
-                    document.getElementById('uploadStatus').textContent = "Error: " + data.error;
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                document.getElementById('uploadStatus').textContent = "Upload failed!";
-            }
+      async function uploadCFile() {
+        const fileInput = document.getElementById("cFile");
+        if (fileInput.files.length === 0) {
+          alert("Please select a C file to upload.");
+          return;
         }
 
-        function downloadDLL() {
-            const dllFileName = document.getElementById('inputs').value;  // Ensure this matches the compiled output
-            window.location.href = "http://127.0.0.1:5000/download/" + dllFileName;
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+          const response = await fetch("http://127.0.0.1:5000/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            document.getElementById("uploadStatus").textContent =
+              "Compilation successful!";
+          } else {
+            document.getElementById("uploadStatus").textContent =
+              "Error: " + data.error;
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          document.getElementById("uploadStatus").textContent =
+            "Upload failed!";
+        }
+      }
+
+      function downloadDLL() {
+        const dllFileName = document.getElementById("inputs").value; // Ensure this matches the compiled output
+        window.location.href = "http://127.0.0.1:5000/download/" + dllFileName;
+      }
+
+      function fetchData() {
+        let layoutId = document.getElementById("layout_id").value.trim();
+        if (layoutId === "") {
+          alert("Please enter a Layout ID.");
+          return;
         }
 
-        function fetchData() {
-            let layoutId = document.getElementById("layout_id").value.trim();
-            if (layoutId === "") {
-                alert("Please enter a Layout ID.");
-                return;
-            }
+        fetch(`/fetch-data/${layout_id}`)
+          .then((response) => response.json())
+          .then((data) => {
+            alert(data.message); // Show success message
+          })
+          .catch((error) => {
+            alert("Error fetching data: " + error);
+          });
+      }
 
-            fetch(`/fetch-data/${layout_id}`)
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message); // Show success message
-                })
-                .catch(error => {
-                    alert("Error fetching data: " + error);
-                });
+      const form = document.getElementById("dllForm");
+      const resultDiv = document.getElementById("result");
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const filename = document.getElementById("filename").value.trim();
+        if (!filename) {
+          resultDiv.textContent = "Please enter a filename.";
+          return;
         }
+
+        try {
+          const response = await fetch("http://127.0.0.1:5000/generate_DLL", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ filename }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            resultDiv.textContent = `✅ Success! DLL saved at: ${data.output_dll}`;
+          } else {
+            resultDiv.textContent = `❌ Error: ${
+              data.error || "Unknown error"
+            }`;
+            console.error(data);
+          }
+        } catch (err) {
+          resultDiv.textContent = `❌ Request failed: ${err.message}`;
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
