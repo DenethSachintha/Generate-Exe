@@ -6,7 +6,9 @@
     <title>Generate Executable</title>
   </head>
   <body>
-    <h1>Custom Executable Generator</h1>
+    <h2>Custom Executable Generate</h2>
+    <p>Enter your customization to generate an executable file.</p>
+    <p>Note: The generated executable will be a simple C program.</p>
     <form id="exeForm">
       <label for="inputs">Enter your customization:</label>
       <input type="text" id="inputs" name="inputs" required />
@@ -22,7 +24,9 @@
     </form>
 
     <p id="uploadStatus"></p>
-    <p>Add name of uploaded file</p>
+    <h2>Download generated DLL file</h2>
+    <label for="dllFileName">Enter file name:</label>
+    <input type="text" id="dllFileName" name="dllFileName" placeholder=""/>
     <button id="downloadBtn" style="display: block" onclick="downloadDLL()">
       Download Compiled DLL
     </button>
@@ -107,7 +111,7 @@
       }
 
       function downloadDLL() {
-        const dllFileName = document.getElementById("inputs").value; // Ensure this matches the compiled output
+        const dllFileName = document.getElementById("dllFileName").value; // Ensure this matches the compiled output
         window.location.href = "http://127.0.0.1:5000/download/" + dllFileName;
       }
 
