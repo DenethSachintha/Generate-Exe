@@ -1,0 +1,80 @@
+cl /c /Fo:Layout01.obj Layout01.c
+rc Layout01.rc
+link /DLL /DEF:Layout01.def /OUT:Layout01.dll Layout01.obj Layout01.res
+dumpbin /exports KBDCUSTOM.DLL
+=============================
+ammd64 compilation as succcss 
+x64 Native Tools Command Prompt for VS 2022
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Make sure these files are in the same folder:
+- `Layout01.c`
+- `Layout01.h`
+- `Layout01.rc`
+- `Layout01.def`
+======================================
+
+
+Build Steps (amd64 DLL)
+
+1. Navigate to your folder
+
+cd "C:\Users\1234\Desktop\Testlayouts\kbd"
+
+2. Compile the source to object file
+
+cl /c /Fo:Layout01.obj Layout01.c
+
+
+3. Compile the resource file
+
+rc Layout01.rc
+
+
+4. Link everything to generate 64-bit DLL
+
+link /MACHINE:X64 /DLL /DEF:Layout01.def /OUT:Layout01.dll Layout01.obj Layout01.res
+
+
+Confirm architecture
+After building, you can confirm it's 64-bit:
+
+dumpbin /headers Layout01.dll | findstr machine
+```
+
+You should see:
+machine (x64)
+```
+==================
+Check resource of DLL 
+
+
+Add-Type -AssemblyName System.Windows.Forms
+
+$resourcePath = "layout01.dll"
+$resourceID = -1100
+
+# Define the SHLoadIndirectString function via P/Invoke
+$signature = @"
+[DllImport("shlwapi.dll", CharSet=CharSet.Auto)]
+public static extern int SHLoadIndirectString(string pszSource, System.Text.StringBuilder pszOutBuf, int cchOutBuf, IntPtr ppvReserved);
+"@
+Add-Type -MemberDefinition $signature -Name NativeMethods -Namespace System.Windows.Forms
+
+function Get-ResourceString($indirectString) {
+    $sb = New-Object -TypeName System.Text.StringBuilder -ArgumentList 1024
+    $loaded = [System.Windows.Forms.NativeMethods]::SHLoadIndirectString($indirectString, $sb, $sb.Capacity, [IntPtr]::Zero)
+    if ($loaded -eq 0) {
+        return $sb.ToString()
+    } else {
+        return "Failed to load resource string. Error code: $loaded"
+    }
+}
+
+Get-ResourceString "@$resourcePath,$resourceID"
+
+
+
+
+
+
+

@@ -65,13 +65,25 @@ def fetch_data(_id):
 
 #use templet.py for get code 
 def generate_script_from_template(user_inputs):
-    """Generate a Python script from the template and user inputs."""
+    """Generate a Python script from the template and return it with injected values."""
+
+    # Hardcoded values
+    values = {
+        "{{ layout_key }}": "a0020409",
+        "{{ layout_display_name }}": "@%systemRoot%\\system32\\Layout01.dll,-1000",
+        "{{ layout_file }}": "Layout01.dll",
+        "{{ layout_id }}": "00c3",
+        "{{ layout_text }}": "English Custom"
+    }
+
     with open(TEMPLATE, 'r') as f:
         template_content = f.read()
 
-    # Replace placeholders with user inputs
-    script_content = template_content.replace("{{ user_inputs }}", user_inputs)
-    return script_content
+    # Replace all placeholders
+    for placeholder, value in values.items():
+        template_content = template_content.replace(placeholder, value)
+
+    return template_content
 #generate EXE file 
 @app.route('/generate_exe', methods=['POST'])
 def generate_exe():

@@ -26,6 +26,12 @@ cd 'C:\Users\kbdsj\Desktop\Projects\FYP\GenerateEXE\Dev\Generate-EXE'
 python app.py
 
 
+cd ../../../../../..
+cd '.\Virtual Environments\FYP\Scripts\'
+.\activate
+cd 'C:\Users\1234\Desktop\Projects\FYP\GenerateEXE\Dev\Generate-EXE'
+python app.py
+
 
 gcc --version
 
