@@ -1,0 +1,15 @@
+Fetch the latest changes from the remote repository:
+git fetch origin
+
+Update your local main branch:
+git pull origin main
+
+
+git config --global user.email "kbdajayathilaka@gmail.com"
+ git config --global user.name "Deneth"
+
+git status
+git checkout main
+git add .
+git commit -m "Your message"
+git push origin main

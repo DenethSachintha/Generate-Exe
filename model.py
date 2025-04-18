@@ -1,6 +1,7 @@
 # model.py
 import os
 import shutil
+import chardet
 import subprocess
 from flask import Flask, request, jsonify, send_file, render_template
 from werkzeug.utils import secure_filename
@@ -13,12 +14,47 @@ ALLOWED_EXTENSIONS = {"c"}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(COMPILED_DIRY, exist_ok=True)
 
-def handle_dll_generation():
-    data = request.get_json()
-    filename = data.get("filename")  # e.g., Layout01
+def update_rc_file_from_blueprint(filename, resource_values=None):
     if not filename:
-        return jsonify({"error": "❌ Filename not provided."}), 400
+        return False, "❌ Filename not provided."
 
+    blueprint_rc_path = os.path.join("blueprints", "Layout.RC")
+    updated_rc_path = os.path.join("updated", f"{filename}.RC")
+
+    # Default replacements
+    if resource_values is None:
+        resource_values = {
+            "resource_1200": "en-US",
+            "resource_1000": "US - Custom"
+        }
+
+    # Read and detect encoding
+    try:
+        with open(blueprint_rc_path, 'rb') as f:
+            raw_data = f.read()
+            detected_encoding = chardet.detect(raw_data)['encoding']
+            rc_content = raw_data.decode(detected_encoding)
+    except Exception as e:
+        return False, f"❌ Error reading blueprint RC: {str(e)}"
+
+    # Replace placeholders like "resource_1200" with actual values
+    for placeholder, value in resource_values.items():
+        rc_content = rc_content.replace(f'"{placeholder}"', f'"{value}"')
+
+    # Normalize whitespace (remove extra newlines)
+    cleaned_lines = [line.strip() for line in rc_content.splitlines() if line.strip()]
+    cleaned_content = "\n".join(cleaned_lines)
+
+    # Ensure destination folder exists
+    os.makedirs(os.path.dirname(updated_rc_path), exist_ok=True)
+
+    # Save updated file
+    with open(updated_rc_path, 'w', encoding='utf-8') as f:
+        f.write(cleaned_content)
+
+    return True, updated_rc_path
+
+def handle_dll_generation(filename):
     base_dir = os.getcwd()
     updated_dir = os.path.join(base_dir, "updated")
     compiled_dir = os.path.join(base_dir, "compiled")
