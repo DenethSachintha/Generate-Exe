@@ -14,6 +14,68 @@ ALLOWED_EXTENSIONS = {"c"}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(COMPILED_DIRY, exist_ok=True)
 
+def update_c_file_from_blueprint(filename):
+    blueprint_path = os.path.join('blueprints', 'Layout.C')
+    output_path = os.path.join('updated', f'{filename}.C')
+
+    # Hardcoded data (must match number of VK_TO_WCHARS3 rows = 54)
+    flags = [
+        "0", "0", "0", "0", "0", "0", "0", "0", "0", "0",
+        "0", "0", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK",
+        "CAPLOK", "CAPLOK", "0", "0", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK",
+        "CAPLOK", "CAPLOK", "CAPLOK", "0", "0", "0", "0", "CAPLOK", "CAPLOK", "CAPLOK",
+        "CAPLOK", "CAPLOK", "CAPLOK", "CAPLOK", "0", "0", "0", "0", "0", "0",
+        "0", "0", "0", "0"
+    ]
+
+    normal = [
+        "'1'", "'2'", "'3'", "'4'", "'5'", "'6'", "'7'", "'8'", "'9'", "'0'",
+        "'-'", "'='", "'q'", "'w'", "'e'", "'r'", "'t'", "'y'", "'u'", "'i'",
+        "'o'", "'p'", "'['", "']'", "'a'", "'s'", "'d'", "'f'", "'g'", "'h'",
+        "'j'", "'k'", "'l'", "';'", "'\\''", "'`'", "'\\\\'", "'z'", "'x'", "'c'",
+        "'v'", "'b'", "'n'", "'m'", "','", "'.'", "'/'", "' '", "'\\\\'", "'.'",
+        "'\\b'", "0x001b", "'\\r'", "0x0003"
+    ]
+
+    shift = [
+        "'!'", "'@'", "'#'", "'$'", "'%'", "'^'", "'&'", "'*'", "'('", "')'",
+        "'_'", "'+'", "'Q'", "'W'", "'E'", "'R'", "'T'", "'Y'", "'U'", "'I'",
+        "'O'", "'P'", "'{'", "'}'", "'A'", "'S'", "'D'", "'F'", "'G'", "'H'",
+        "'J'", "'K'", "'L'", "':'", "'\"'", "'~'", "'|'", "'Z'", "'X'", "'C'",
+        "'V'", "'B'", "'N'", "'M'", "'<'", "'>'", "'?'", "' '", "'|'", "'.'",
+        "'\\b'", "0x001b", "'\\r'", "0x0003"
+    ]
+
+    ctrl = [
+        "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE",
+        "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE",
+        "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE",
+        "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "0x001b", "0x001d",
+        "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE",
+        "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE",
+        "0x001c", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE",
+        "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "WCH_NONE", "' '",
+        "0x001c", "WCH_NONE", "0x007f", "0x001b", "'\\n'", "0x0003"
+    ]
+
+    # Read blueprint
+    with open(blueprint_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # Replace placeholders in loop
+    for i in range(len(flags)):
+        content = content.replace(f"PH_F_{i:02d}", flags[i])
+        content = content.replace(f"PH_N_{i:02d}", normal[i])
+        content = content.replace(f"PH_S_{i:02d}", shift[i])
+        content = content.replace(f"PH_C_{i:02d}", ctrl[i])
+
+    # Save updated C file
+    os.makedirs('updated', exist_ok=True)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    print(f"Updated C file saved as: {output_path}")
+
 def update_rc_file_from_blueprint(filename, resource_values=None):
     if not filename:
         return False, "❌ Filename not provided."

@@ -1,6 +1,6 @@
 #app.py
 from flask import Flask, request, jsonify, send_file, render_template
-from model import clear_directory, upload_and_compile, download_file_handler,handle_dll_generation, update_rc_file_from_blueprint
+from model import clear_directory, upload_and_compile, download_file_handler,handle_dll_generation, update_rc_file_from_blueprint, update_c_file_from_blueprint
 import subprocess
 import os
 import uuid
@@ -36,13 +36,21 @@ def generate_dll_route():
     if not filename:
         return jsonify({"error": "❌ Filename not provided."}), 400
 
-    # Step 1: Generate updated RC file
-    success, result = update_rc_file_from_blueprint(filename)
-    if not success:
-        return jsonify({"error": result}), 500
+    try:
+        # Step 1: Generate updated C file from blueprint
+        update_c_file_from_blueprint(filename)
 
-    # Step 2: Generate DLL using existing handler
-    return handle_dll_generation(filename)
+        # Step 2: Generate updated RC file from blueprint
+        success, result = update_rc_file_from_blueprint(filename)
+        if not success:
+            return jsonify({"error": result}), 500
+
+        # Step 3: Generate DLL using existing handler
+        return handle_dll_generation(filename)
+
+    except Exception as e:
+        return jsonify({"error": f"❌ Internal server error: {str(e)}"}), 500
+
 #Uploads C file and Compile it into ddl format
 @app.route("/upload", methods=["POST"])
 def handle_upload():
